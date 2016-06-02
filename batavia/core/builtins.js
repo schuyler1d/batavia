@@ -278,7 +278,7 @@ batavia.builtins.bytes.__doc__ = 'bytes(iterable_of_ints) -> bytes\nbytes(string
 
 batavia.builtins.callable = function(args, kwargs) {
     if (arguments.length != 2) {
-        throw new batavia.builtins.BataviaError('Batavia calling convention not used.');
+        throw new batavia.builtins.BataviaError('Batavia calling convention not used (callable).');
     }
     if (kwargs && Object.keys(kwargs).length > 0) {
         throw new batavia.builtins.TypeError("callable() doesn't accept keyword arguments");
@@ -286,7 +286,7 @@ batavia.builtins.callable = function(args, kwargs) {
     if (!args || args.length != 1) {
         throw new batavia.builtins.TypeError('callable() expected exactly 1 argument (' + args.length + ' given)');
     }
-    if (typeof(args[0]) === "function") {
+    if (typeof(args[0]) === "function" || (args[0] && args[0].__call__)) {
         return true;
     } else {
         return false;
@@ -475,6 +475,18 @@ batavia.builtins.exit = function(args, kwargs) {
 
 batavia.builtins.file = function() {
     throw new batavia.builtins.NotImplementedError("Builtin Batavia function 'file' not implemented");
+};
+
+batavia.builtins.filter = function(args, kwargs) {
+  console.log(arguments.length);
+    if (arguments.length != 2) {
+        throw new batavia.builtins.BataviaError('Batavia calling convention not used.');
+    }
+    if (kwargs && Object.keys(kwargs).length > 0) {
+        throw new batavia.builtins.TypeError("filter() doesn't accept keyword arguments");
+    }
+  console.log('hi');
+    return new batavia.types.filter(args, kwargs);
 };
 
 batavia.builtins.float = function(args) {
@@ -668,8 +680,14 @@ batavia.builtins.license = function() {
     throw new batavia.builtins.NotImplementedError("Builtin Batavia function 'license' not implemented");
 };
 
-batavia.builtins.list = function() {
-    throw new batavia.builtins.NotImplementedError("Builtin Batavia function 'list' not implemented");
+batavia.builtins.list = function(args, kwargs) {
+    if (arguments.length != 2) {
+        throw new batavia.builtins.BataviaError('Batavia calling convention not used.');
+    }
+    if (kwargs && Object.keys(kwargs).length > 0) {
+        throw new batavia.builtins.TypeError("list() doesn't accept keyword arguments");
+    }
+    return new batavia.types.List(args[0]);
 };
 
 batavia.builtins.locals = function() {
@@ -681,8 +699,13 @@ batavia.builtins.long = function() {
 };
 
 batavia.builtins.map = function(args, kwargs) {
-    // FIXME
-    args[0].call(this, [args[1]], {});
+    if (arguments.length != 2) {
+        throw new batavia.builtins.BataviaError('Batavia calling convention not used.');
+    }
+    if (kwargs && Object.keys(kwargs).length > 0) {
+        throw new batavia.builtins.TypeError("map() doesn't accept keyword arguments");
+    }
+  return new batavia.types.map(args, kwargs);
 };
 
 batavia.builtins.max = function(args, kwargs) {

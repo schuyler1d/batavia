@@ -477,10 +477,6 @@ batavia.builtins.file = function() {
     throw new batavia.builtins.NotImplementedError("Builtin Batavia function 'file' not implemented");
 };
 
-batavia.builtins.filter = function() {
-    throw new batavia.builtins.NotImplementedError("Builtin Batavia function 'filter' not implemented");
-};
-
 batavia.builtins.float = function(args) {
     if (args.length > 1) {
         throw new batavia.builtins.TypeError("float() takes at most 1 argument (" + args.length + " given)");

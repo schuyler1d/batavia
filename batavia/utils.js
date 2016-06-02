@@ -173,3 +173,18 @@ batavia.make_callable = function(func) {
     fn.__python__ = true;
     return fn;
 };
+
+batavia.run_callable = function(func, args, kwargs, locals) {
+    //func may be a javascript function or a python callable
+    if (typeof(func) === "function") {
+        return func.call(func._vm, args, kwargs, locals);
+    } else if (func.__call__) {
+        if (typeof(func.__call__) == "function") {
+            return func.__call__.call(func._vm, args, kwargs, locals);
+        } else {
+            return batavia.run_callable(func.__call__, args, kwargs, locals);      
+        }
+    } else {
+        throw new batavia.builtins.BataviaError('callable (' + func.toString() + ') not callable');
+    }
+}

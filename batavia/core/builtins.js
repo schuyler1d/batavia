@@ -654,7 +654,7 @@ batavia.builtins.iter = function(args, kwargs) {
     }
 
     if (args[0].__iter__) {
-        return args[0].__iter__();
+        return batavia.run_callable(args[0].__iter__, [args[0]], null);
     } else {
         throw new batavia.builtins.TypeError("'" + batavia.type_name(args[0]) + "' object is not iterable");
     }

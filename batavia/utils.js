@@ -174,17 +174,39 @@ batavia.make_callable = function(func) {
     return fn;
 };
 
-batavia.run_callable = function(func, args, kwargs, locals) {
-    //func may be a javascript function or a python callable
-    if (typeof(func) === "function") {
-        return func.call(func._vm, args, kwargs, locals);
-    } else if (func.__call__) {
-        if (typeof(func.__call__) == "function") {
-            return func.__call__.call(func._vm, args, kwargs, locals);
-        } else {
-            return batavia.run_callable(func.__call__, args, kwargs, locals);      
+batavia.run_callable = function(func, posargs, namedargs) {
+    var vm = (this.is_vm ? this : func._vm || this);
+    if ('__self__' in func && '__python__' in func) {
+        // A python-style method
+        // Methods calls get self as an implicit first parameter.
+        if (func.__self__) {
+            posargs.unshift(func.__self__);
         }
-    } else {
-        throw new batavia.builtins.BataviaError('callable (' + func.toString() + ') not callable');
+        // The first parameter must be the correct type.
+        if (posargs[0] instanceof func.constructor) {
+            throw 'unbound method ' + func.__func__.__name__ + '()' +
+                ' must be called with ' + func.__class__.__name__ + ' instance ' +
+                'as first argument (got ' + posargs[0].prototype + ' instance instead)';
+        }
+        func = func.__func__.__call__;
+    } else if ('__call__' in func) {
+        // A Python callable
+        func = func.__call__;
+    } else if (func.prototype) {
+        // If this is a native Javascript class constructor, wrap it
+        // in a method that uses the Python calling convention, but
+        // instantiates the object.
+        if (Object.keys(func.prototype).length > 0) {
+            func = function(fn) {
+                return function(args, kwargs) {
+                    var obj = Object.create(fn.prototype);
+                    fn.apply(obj, args);
+                    return obj;
+                };
+            }(func);
+        }
     }
+
+    var retval = func.apply(vm, [posargs, namedargs]);
+    return retval;
 }

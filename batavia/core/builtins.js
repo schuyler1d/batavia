@@ -652,11 +652,11 @@ batavia.builtins.iter = function(args, kwargs) {
     if (args.length > 2) {
         throw new batavia.builtins.TypeError("len() expected at most 2 arguments, got 3");
     }
-
-    if (args[0].__iter__) {
-        return batavia.run_callable(args[0].__iter__, [args[0]], null);
+    var iterobj = args[0];
+    if (iterobj.__iter__) {
+        return batavia.run_callable(iterobj.__iter__, [iterobj], null);
     } else {
-        throw new batavia.builtins.TypeError("'" + batavia.type_name(args[0]) + "' object is not iterable");
+        throw new batavia.builtins.TypeError("'" + batavia.type_name(iterobj) + "' object is not iterable");
     }
 };
 batavia.builtins.iter.__doc__ = 'iter(iterable) -> iterator\niter(callable, sentinel) -> iterator\n\nGet an iterator from an object.  In the first form, the argument must\nsupply its own iterator, or be a sequence.\nIn the second form, the callable is called until it returns the sentinel.';

@@ -177,10 +177,11 @@ batavia.make_callable = function(func) {
 batavia.run_callable = function(self, func, posargs, namedargs) {
     //self = (self.is_vm ? self : this);
     //var vm = (this.is_vm ? this : func._vm || this);
-    var DEBUG = true;
+    var DEBUG = false;
     if (DEBUG) console.log('skyskyPrototype',
                            '__NAME', func.__name__,
                            'jsNAME', func.name,
+                           '.IS_VM', self.is_vm,
                            'FUNC(', func, ')',
                            '__VM(', func._vm, ')',
                            '__PYTHON', func.__python__,

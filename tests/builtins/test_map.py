@@ -20,7 +20,7 @@ class BuiltinMapFunctionTests(BuiltinFunctionTestCase, TranspileTestCase):
                     return self.x[self.index]
 
                 def __iter__(self):
-                    print("__iter__ in python testcase")
+                    #print("__iter__ in python testcase")
                     return self
                 
             def testish(x):

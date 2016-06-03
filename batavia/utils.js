@@ -175,61 +175,44 @@ batavia.make_callable = function(func) {
 };
 
 batavia.run_callable = function(self, func, posargs, namedargs) {
-    //self = (self.is_vm ? self : this);
-    //var vm = (this.is_vm ? this : func._vm || this);
-    var DEBUG = false;
-    if (DEBUG) console.log('skyskyPrototype',
-                           '__NAME', func.__name__,
-                           'jsNAME', func.name,
-                           '.IS_VM', self.is_vm,
-                           'FUNC(', func, ')',
-                           '__VM(', func._vm, ')',
-                           '__PYTHON', func.__python__,
-                           '__FUNC', func.__func__,
-                           '__SELF', func.__self__, self, func._vm, self.__self__
-                          );
-    if (false && DEBUG && func.__name__ == 'ListLike.__iter__') {
-        console.log('skyskysky');
-        for (var a in func) {
-            console.log('attr', a, func[a]);
-        }
-        for (var a in func.__code__) {
-            console.log('CODE attr', a, func.__code__[a]);
-        }
-                               
-    }
-
-    /*
-      A couple of scenarios:
-      //run_callable(<js_parent_obj>, <js method>, ...)
-      run_callable(<python_parent_obj>, <python_method (with func._vm)>, ...)
-      run_callable(<virtualmachine.is_vm=true>, <python method>, ...)
-      run_callable(<falseish>, <python method (func._vm)>, ...)
-     */
+    // Here you are in JS-land, and you want to call a method on an object
+    // but what kind of callable is it?  You may not know if you were passed
+    // the function as an argument.
     
-    var origself = self;
+    // TODO: consider separating these out, which might make things more
+    //   efficient, but this at least consolidates the use-cases.
+    
+    // This gets the right js-callable thing, and runs it in the VirtualMachine.
+    
+    // There are a couple of scenarios:
+    // 1. You *are* the virtual machine, and you want to call it: 
+    //    See batavia.VirtualMachine.prototype.call_function
+    //    run_callable(<virtualmachine.is_vm=true>, <python method>, ...)
+    //    i.e. run_callable(this, func, posargs, namedargs_dict)
+    // 2. You are in a JS-implemented type, and the method or object is
+    //    e.g. batavia/types/Map.js,Filter.js
+    //    run_callable(<python_parent_obj>, <python_method (with func._vm)>, ...)
+    //    If you are just passed an anonymous method:
+    //    run_callable(<falsish>, <python_method (with func._vm)>, ...)
+    // 3. You are in a builtin called by javascript and you also don't
+    //    know the provenance of the object/function
+    //    e.g. iter() called internally by types/Map.js
+    //    see #2 scenario
 
-    if (func._vm) {
-        if (DEBUG) console.log('CHANGING SELF TO VM');
-        //will be true for type Function
-        self = func._vm;
+    //the VM should pass itself in self, but if it already blessed
+    //  a method with itself on ._vm just use that.
+    var vm = (func._vm) ? func._vm : self;
+    
+    if (self && !self.is_vm && func.__python__ && !func.__self__) {
+        // In scenarios 2,3 the VM would normally be doing this
+        // at the moment of getting the function through LOAD_ATTR
+        // but if we call it by JS, then it still needs to be
+        // decorated with itself
+        func = new batavia.types.Method(self, func);
+        // Note, we change func above, so it can get __self__
+        // and be affected by the code-path below
     }
 
-    if (!origself.is_vm && func.__python__) {
-        if (origself) {
-            if (!func.__self__) {
-                if (DEBUG) console.log('INSTANTIATING METHOD');                
-                func = new batavia.types.Method(origself, func);
-            }
-        }
-    }
-
-
-    //if (func.foosky) {
-        //console.log('skyfoosky');
-        //return func.apply(self, [posargs, namedargs]);
-    //}
-    //new batavia.types.Method(obj, val)
     if ('__python__' in func && '__self__' in func) {
         // A python-style method
         // Methods calls get self as an implicit first parameter.
@@ -259,37 +242,9 @@ batavia.run_callable = function(self, func, posargs, namedargs) {
                     return obj;
                 };
             }(func);
-        } else {
-            if (!func.__python__) {
-                if (DEBUG)
-                    console.log('construct testtest', origself, self, posargs[0], String(func));
-            }
         }
     }
 
-    if (DEBUG)
-        console.log('skysky222Prototype', func.__python__, func.__self__, self, func._vm);
-    var retval = func.apply(self, [posargs, namedargs]);
+    var retval = func.apply(vm, [posargs, namedargs]);
     return retval;
-}
-
-batavia.run_func = function(self, parent, func, args, kwargs, locals) {
-  //func may be a javascript function or a python callable
-  //console.log('skysky', func, func.__call__, func.__python__);
-
-    return func.apply(parent, [args, kwargs, locals]);
-    
-  return func.call(parent, args, kwargs, locals); //this works for test_for case  
-
-    if (typeof(func) === "function") {
-        return func.call(self, args, kwargs, locals);
-    } else if (func.__call__) {
-        if (typeof(func.__call__) == "function") {
-            return func.__call__.call(func._vm, args, kwargs, locals);
-        } else {
-            return batavia.run_func(func.__call__, args, kwargs, locals);      
-        }
-    } else {
-        throw new batavia.builtins.BataviaError('callable (' + func.toString() + ') not callable');
-    }
 }

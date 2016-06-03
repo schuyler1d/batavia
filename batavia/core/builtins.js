@@ -282,7 +282,7 @@ batavia.builtins.bytes.__doc__ = 'bytes(iterable_of_ints) -> bytes\nbytes(string
 
 batavia.builtins.callable = function(args, kwargs) {
     if (arguments.length != 2) {
-        throw new batavia.builtins.BataviaError('Batavia calling convention not used (callable).');
+        throw new batavia.builtins.BataviaError('Batavia calling convention not used.');
     }
     if (kwargs && Object.keys(kwargs).length > 0) {
         throw new batavia.builtins.TypeError("callable() doesn't accept keyword arguments");
@@ -651,6 +651,7 @@ batavia.builtins.iter = function(args, kwargs) {
     }
     var iterobj = args[0];
     if (iterobj.__iter__) {
+        //needs to work for __iter__ in JS impl (e.g. Map/Filter) and python ones
         return batavia.run_callable(iterobj, iterobj.__iter__, [], null);
     } else {
         throw new batavia.builtins.TypeError("'" + batavia.type_name(iterobj) + "' object is not iterable");

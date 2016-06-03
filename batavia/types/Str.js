@@ -100,7 +100,7 @@ String.prototype.__invert__ = function() {
  **************************************************/
 
 String.prototype.__pow__ = function(other) {
-    throw new batavia.builtins.NotImplementedError("String.__pow__ has not been implemented");
+    throw new batavia.builtins.TypeError("unsupported operand type(s) for ** or pow(): 'str' and '"+ batavia.type_name(other) + "'");
 };
 
 String.prototype.__div__ = function(other) {
@@ -235,6 +235,9 @@ String.prototype.__iadd__ = function(other) {
                 ])) {
         throw new batavia.builtins.TypeError("Can't convert '" + batavia.type_name(other) + "' object to str implicitly");
 
+    } else if (batavia.isinstance(other, batavia.types.Str)){
+        return this.valueOf() + other.valueOf();
+
     } else {
         throw new batavia.builtins.NotImplementedError("String.__iadd__ has not been implemented");
     }
@@ -282,12 +285,37 @@ String.prototype.__iand__ = function(other) {
 };
 
 String.prototype.__ixor__ = function(other) {
-    throw new batavia.builtins.NotImplementedError("String.__ixor__ has not been implemented");
+    if (batavia.isinstance(other, [
+            batavia.types.Bool,
+            batavia.types.Dict,
+            batavia.types.Float,
+            batavia.types.Int,
+            batavia.types.List,
+            batavia.types.NoneType,
+            batavia.types.Str,
+            batavia.types.Tuple,
+        ])) {
+        throw new batavia.builtins.TypeError("unsupported operand type(s) for ^=: 'str' and '" + batavia.type_name(other) + "'");
+    } else {
+        throw new batavia.builtins.NotImplementedError("String.__ixor__ has not been implemented");
+    }
 };
 
 String.prototype.__ior__ = function(other) {
-    throw new batavia.builtins.NotImplementedError("String.__ior__ has not been implemented");
-};
+    if (batavia.isinstance(other, [
+            batavia.types.Bool,
+            batavia.types.Dict,
+            batavia.types.Float,
+            batavia.types.Int,
+            batavia.types.List,
+            batavia.types.NoneType,
+            batavia.types.Str,
+            batavia.types.Tuple
+        ])) {
+        throw new batavia.builtins.TypeError("unsupported operand type(s) for |=: 'str' and '" + batavia.type_name(other) + "'");
+    } else {
+        throw new batavia.builtins.NotImplementedError("String.__ior__ has not been implemented");
+    }};
 
 /**************************************************
  * Str Iterator

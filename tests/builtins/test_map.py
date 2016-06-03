@@ -13,15 +13,16 @@ class BuiltinMapFunctionTests(BuiltinFunctionTestCase, TranspileTestCase):
                 x = %s
                 index = 0
 
-                def __iter__(self):
-                    return self
-
                 def __next__(self):
                     self.index = self.index + 1
                     if self.index > len(self.x):
                         raise StopIteration
                     return self.x[self.index]
 
+                def __iter__(self):
+                    print("__iter__ in python testcase")
+                    return self
+                
             def testish(x):
                 return %s
 

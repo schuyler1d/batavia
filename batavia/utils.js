@@ -141,7 +141,7 @@ batavia.make_class = function(args, kwargs) {
         __new__.__python__ = true;
         return __new__;
     }(this, klass);
-
+    
     return PyObject;
 };
 
@@ -175,14 +175,67 @@ batavia.make_callable = function(func) {
 };
 
 batavia.run_callable = function(self, func, posargs, namedargs) {
-    self = (self.is_vm ? self : this);
+    //self = (self.is_vm ? self : this);
     //var vm = (this.is_vm ? this : func._vm || this);
-    if ('__self__' in func && '__python__' in func) {
+    var DEBUG = true;
+    if (DEBUG) console.log('skyskyPrototype',
+                           '__NAME', func.__name__,
+                           'jsNAME', func.name,
+                           'FUNC(', func, ')',
+                           '__VM(', func._vm, ')',
+                           '__PYTHON', func.__python__,
+                           '__FUNC', func.__func__,
+                           '__SELF', func.__self__, self, func._vm, self.__self__
+                          );
+    if (false && DEBUG && func.__name__ == 'ListLike.__iter__') {
+        console.log('skyskysky');
+        for (var a in func) {
+            console.log('attr', a, func[a]);
+        }
+        for (var a in func.__code__) {
+            console.log('CODE attr', a, func.__code__[a]);
+        }
+                               
+    }
+
+    /*
+      A couple of scenarios:
+      //run_callable(<js_parent_obj>, <js method>, ...)
+      run_callable(<python_parent_obj>, <python_method (with func._vm)>, ...)
+      run_callable(<virtualmachine.is_vm=true>, <python method>, ...)
+      run_callable(<falseish>, <python method (func._vm)>, ...)
+     */
+    
+    var origself = self;
+
+    if (func._vm) {
+        if (DEBUG) console.log('CHANGING SELF TO VM');
+        //will be true for type Function
+        self = func._vm;
+    }
+
+    if (!origself.is_vm && func.__python__) {
+        if (origself) {
+            if (!func.__self__) {
+                if (DEBUG) console.log('INSTANTIATING METHOD');                
+                func = new batavia.types.Method(origself, func);
+            }
+        }
+    }
+
+
+    //if (func.foosky) {
+        //console.log('skyfoosky');
+        //return func.apply(self, [posargs, namedargs]);
+    //}
+    //new batavia.types.Method(obj, val)
+    if ('__python__' in func && '__self__' in func) {
         // A python-style method
         // Methods calls get self as an implicit first parameter.
         if (func.__self__) {
             posargs.unshift(func.__self__);
         }
+
         // The first parameter must be the correct type.
         if (posargs[0] instanceof func.constructor) {
             throw 'unbound method ' + func.__func__.__name__ + '()' +
@@ -197,7 +250,7 @@ batavia.run_callable = function(self, func, posargs, namedargs) {
         // If this is a native Javascript class constructor, wrap it
         // in a method that uses the Python calling convention, but
         // instantiates the object.
-        if (Object.keys(func.prototype).length > 0) {
+        if (!func.__python__ && Object.keys(func.prototype).length > 0) {
             func = function(fn) {
                 return function(args, kwargs) {
                     var obj = Object.create(fn.prototype);
@@ -205,17 +258,26 @@ batavia.run_callable = function(self, func, posargs, namedargs) {
                     return obj;
                 };
             }(func);
+        } else {
+            if (!func.__python__) {
+                if (DEBUG)
+                    console.log('construct testtest', origself, self, posargs[0], String(func));
+            }
         }
     }
 
+    if (DEBUG)
+        console.log('skysky222Prototype', func.__python__, func.__self__, self, func._vm);
     var retval = func.apply(self, [posargs, namedargs]);
     return retval;
 }
 
 batavia.run_func = function(self, parent, func, args, kwargs, locals) {
   //func may be a javascript function or a python callable
-  //console.log('sky', func, args);
+  //console.log('skysky', func, func.__call__, func.__python__);
 
+    return func.apply(parent, [args, kwargs, locals]);
+    
   return func.call(parent, args, kwargs, locals); //this works for test_for case  
 
     if (typeof(func) === "function") {

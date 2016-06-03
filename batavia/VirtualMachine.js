@@ -2,7 +2,7 @@
 /*************************************************************************
  * Virtual Machine
  *************************************************************************/
-
+var VIRTDEBUG=false;
 batavia.VirtualMachine = function(loader) {
     // Initialize the bytecode module
     batavia.modules.dis.init();
@@ -932,6 +932,7 @@ batavia.VirtualMachine.prototype.run_frame = function(frame) {
         // When unwinding the block stack, we need to keep track of why we
         // are doing it.
         try {
+            if (VIRTDEBUG) console.log('VIRTUAL MACHINE ARGS', opname, operation.args);
             why = operation.op_method.apply(this, operation.args);
         } catch (err) {
             // deal with exceptions encountered while executing the op.
@@ -1031,6 +1032,7 @@ batavia.VirtualMachine.prototype.byte_ROT_FOUR = function() {
 };
 
 batavia.VirtualMachine.prototype.byte_LOAD_NAME = function(name) {
+    if (VIRTDEBUG) console.log('VIRTUAL_MACHINE LOAD_NAME', name);
     var frame = this.frame;
     var val;
     if (name in frame.f_locals) {
@@ -1054,6 +1056,7 @@ batavia.VirtualMachine.prototype.byte_DELETE_NAME = function(name) {
 };
 
 batavia.VirtualMachine.prototype.byte_LOAD_FAST = function(name) {
+    if (VIRTDEBUG) console.log('VIRTUAL_MACHINE _LOAD_FAST', name);
     var val;
     if (name in this.frame.f_locals) {
         val = this.frame.f_locals[name];
@@ -1077,6 +1080,7 @@ batavia.VirtualMachine.prototype.byte_STORE_GLOBAL = function(name) {
 
 batavia.VirtualMachine.prototype.byte_LOAD_GLOBAL = function(name) {
     var val;
+    if (VIRTDEBUG) console.log('VIRTUAL_MACHINE LOAD_GLOBAL', name);
     if (name in this.frame.f_globals) {
         val = this.frame.f_globals[name];
     } else if (name in this.frame.f_builtins) {
@@ -1253,6 +1257,7 @@ batavia.VirtualMachine.prototype.byte_COMPARE_OP = function(opnum) {
 batavia.VirtualMachine.prototype.byte_LOAD_ATTR = function(attr) {
     var obj = this.pop();
     var val = obj[attr];
+    if (VIRTDEBUG) console.log('VIRTUAL MACHINE', attr, 'FFF(', String(val).substring(12,32), ')');
     if (val instanceof batavia.types.Function) {
         // If this is a Python function, we need to know the current
         // context - if it's an attribute of an object (rather than
@@ -1276,18 +1281,24 @@ batavia.VirtualMachine.prototype.byte_LOAD_ATTR = function(attr) {
                 };
             }(val);
         } else {
-            // Native java method
+            // Native javascript method
             val = function(fn) {
                 return function(args, kwargs) {
                     return fn.apply(obj, args);
                 };
             }(val);
+            /*
+            val.__self__ = obj;
+            val.__name__ = attr;
+            val._vm = this;
+            */
         }
     }
     this.push(val);
 };
 
 batavia.VirtualMachine.prototype.byte_STORE_ATTR = function(name) {
+    if (VIRTDEBUG) console.log('VIRTUAL_MACHINE _STORE ATTR', name);    
     var items = this.popn(2);
     if (items[1].__setattr__ == undefined) {
         items[1][name] = items[0];
@@ -1684,10 +1695,13 @@ batavia.VirtualMachine.prototype.byte_MAKE_FUNCTION = function(argc) {
 };
 
 batavia.VirtualMachine.prototype.byte_LOAD_CLOSURE = function(name) {
+    if (VIRTDEBUG) console.log('VIRTUAL_MACHINE _LOAD_CLOSURE', name);
+    
     this.push(this.frame.cells[name]);
 };
 
 batavia.VirtualMachine.prototype.byte_MAKE_CLOSURE = function(argc) {
+    if (VIRTDEBUG) console.log('VIRTUAL_MACHINE _MAKE_CLOSURE', argc);    
     var name = this.pop();
     var items = this.popn(2);
     var defaults = this.popn(argc);

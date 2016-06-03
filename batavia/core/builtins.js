@@ -657,7 +657,9 @@ batavia.builtins.iter = function(args, kwargs) {
     var iterobj = args[0];
     if (iterobj.__iter__) {
         //return iterobj.__iter__();
-      return batavia.run_func(this, iterobj, iterobj.__iter__);
+        //return batavia.run_func(this, iterobj, iterobj.__iter__, [], null);
+        //iterobj.__iter__.foosky = true;
+      return batavia.run_callable(iterobj, iterobj.__iter__, [], null);
       return batavia.run_callable(iterobj.__iter__, [iterobj], null);
     } else {
         throw new batavia.builtins.TypeError("'" + batavia.type_name(iterobj) + "' object is not iterable");

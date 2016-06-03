@@ -174,8 +174,9 @@ batavia.make_callable = function(func) {
     return fn;
 };
 
-batavia.run_callable = function(func, posargs, namedargs) {
-    var vm = (this.is_vm ? this : func._vm || this);
+batavia.run_callable = function(self, func, posargs, namedargs) {
+    self = (self.is_vm ? self : this);
+    //var vm = (this.is_vm ? this : func._vm || this);
     if ('__self__' in func && '__python__' in func) {
         // A python-style method
         // Methods calls get self as an implicit first parameter.
@@ -207,14 +208,18 @@ batavia.run_callable = function(func, posargs, namedargs) {
         }
     }
 
-    var retval = func.apply(vm, [posargs, namedargs]);
+    var retval = func.apply(self, [posargs, namedargs]);
     return retval;
 }
 
-batavia.run_func = function(self, func, args, kwargs, locals) {
-    //func may be a javascript function or a python callable
+batavia.run_func = function(self, parent, func, args, kwargs, locals) {
+  //func may be a javascript function or a python callable
+  //console.log('sky', func, args);
+
+  return func.call(parent, args, kwargs, locals); //this works for test_for case  
+
     if (typeof(func) === "function") {
-        return func.call(func._vm, args, kwargs, locals);
+        return func.call(self, args, kwargs, locals);
     } else if (func.__call__) {
         if (typeof(func.__call__) == "function") {
             return func.__call__.call(func._vm, args, kwargs, locals);

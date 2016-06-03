@@ -1734,7 +1734,7 @@ batavia.VirtualMachine.prototype.call_function = function(arg, args, kwargs) {
 
     var func = this.pop();
     // frame = this.frame
-    var retval = batavia.run_callable(func, posargs, namedargs);
+    var retval = batavia.run_callable(this, func, posargs, namedargs);
     this.push(retval);
 };
 

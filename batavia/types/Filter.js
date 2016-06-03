@@ -44,8 +44,8 @@ batavia.types.filter = function() {
 
         var sval = false;
         do {
-            sval = batavia.run_callable(this._iter.__next__, [this._iter], null);
-        } while (!batavia.run_callable(this._func, [sval], null));
+            sval = batavia.run_callable(this._iter, this._iter.__next__, [], null);
+        } while (!batavia.run_callable(false, this._func, [sval], null));
 
         return sval;
     }

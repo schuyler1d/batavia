@@ -34,18 +34,15 @@ batavia.types.map = function() {
     }
   
     map.prototype.__next__ = function() {
-        var DEBUG = false;
         if (!this._iter) {
-            if (DEBUG) console.log('map._next iter()');            
             this._iter = batavia.builtins.iter([this._sequence], null);
         }
         if (!batavia.builtins.callable([this._func], null)) {
             throw new batavia.builtins.TypeError(
               batavia.type_name(this._func) + "' object is not callable");
         }
-        if (DEBUG) console.log('map._next sval');
+
         var sval = batavia.run_callable(this._iter, this._iter.__next__, [], null);
-        if (DEBUG) console.log('map._next func(sval)');
         return batavia.run_callable(false, this._func, [sval], null);
     }
 
